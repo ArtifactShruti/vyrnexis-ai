@@ -1,0 +1,122 @@
+name: vyrnexis-postgres
+
+x-api: &api
+  image: vyrnexis-postgres-api
+  build:
+    context: .
+    dockerfile: infrastructure/docker/api.Dockerfile
+  environment: &api-environment
+    DATABASE_URL: postgresql+psycopg://vyrnexis:${VYRNEXIS_POSTGRES_PASSWORD:?Generate a local database password}@postgres:5432/vyrnexis
+    REDIS_URL: redis://:${VYRNEXIS_REDIS_PASSWORD:?Generate a local Redis password}@redis:6379/0
+    ENVIRONMENT: production
+    JWT_SECRET: ${VYRNEXIS_POSTGRES_JWT_SECRET:?Generate a separate signing key}
+    VYRNEXIS_SCHEMA_MODE: migrations
+    VYRNEXIS_DETECTION_MODE: worker
+    VYRNEXIS_EVIDENCE_DIR: /app/evidence
+    VYRNEXIS_EMBEDDINGS_ENABLED: ${VYRNEXIS_EMBEDDINGS_ENABLED:-0}
+    VYRNEXIS_EMBEDDING_URL: ${VYRNEXIS_EMBEDDING_URL:-}
+    VYRNEXIS_EMBEDDING_MODEL: ${VYRNEXIS_EMBEDDING_MODEL:-}
+    VYRNEXIS_EMBEDDING_REVISION: ${VYRNEXIS_EMBEDDING_REVISION:-1}
+    CORS_ORIGINS: http://127.0.0.1:3001,http://localhost:3001
+  networks: [data]
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: vyrnexis
+      POSTGRES_DB: vyrnexis
+      POSTGRES_PASSWORD: ${VYRNEXIS_POSTGRES_PASSWORD:?Generate a local database password}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks: [data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vyrnexis -d vyrnexis"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  redis:
+    image: redis:7.4-alpine
+    environment:
+      REDISCLI_AUTH: ${VYRNEXIS_REDIS_PASSWORD:?Generate a local Redis password}
+    command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$$REDISCLI_AUTH\""]
+    volumes:
+      - redis-data:/data
+    networks: [data]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -x PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  migrate:
+    <<: *api
+    command: ["python", "-m", "alembic", "upgrade", "head"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+  api:
+    <<: *api
+    env_file:
+      - path: .env.ai
+        required: false
+    volumes:
+      - evidence-data:/app/evidence
+    networks: [data, app]
+    ports:
+      - "127.0.0.1:8002:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/health',timeout=3).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/web.Dockerfile
+    environment:
+      VYRNEXIS_API_URL: http://api:8000
+    networks: [app]
+    ports:
+      - "127.0.0.1:3001:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/login').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+  worker:
+    <<: *api
+    command: ["python", "-m", "app.detection_worker"]
+    environment:
+      <<: *api-environment
+      VYRNEXIS_INVESTIGATION_TASK_TIMEOUT_SECONDS: ${VYRNEXIS_INVESTIGATION_TASK_TIMEOUT_SECONDS:-30}
+    volumes:
+      - evidence-data:/app/evidence:ro
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "from app.detection import redis_client, HEARTBEAT_KEY; assert redis_client().exists(HEARTBEAT_KEY)"]
+      interval: 10s
+      timeout: 5s
+      retries: 4
+
+networks:
+  data:
+    internal: true
+  app:
+
+volumes:
+  postgres-data:
+  redis-data:
+  evidence-data:

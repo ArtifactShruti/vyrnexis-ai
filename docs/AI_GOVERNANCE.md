@@ -1,0 +1,20 @@
+# Investigation AI governance
+
+VYRNEXIS Investigation Nexus executes seven deterministic analyzers over persisted records. PostgreSQL supplies job state and Redis supplies wake signals. The default deployment has no model provider, embedding service, or external inference.
+
+- The requester must have an active account with the correct organization and role at execution and result publication. Tasks are generated from a fixed dependency graph and operate on the supplied case or incident. ORACLE also uses a bounded tenant-wide incident sample.
+- Each finding carries task and investigation IDs, cited source and evidence references, a brief reasoning summary, limitations, alternative explanations, and a verification state. Source hashes check recorded byte consistency. They cannot establish attribution, original authorship, or legal admissibility.
+- Datasets may be incomplete. ORACLE compares observed days only when coverage suffices. MERCURY uses stored rule factors with no calibrated probability. TRACE checks bounded custody ledgers. VERITAS validates upstream references against tenant records and rehashes at most four files. Access to enrolled bytes requires a forensic writer and the registered case. It creates an examination event before the read.
+- Runs enter a human review queue after processing. An authorized reviewer records approval or rejection and a rationale. The decision applies to the run and leaves its individual findings and source records intact.
+- Failed attempts and cancellations remain visible. A 45-second lease prevents publication after expiry, while retry backoff allows up to three attempts. PostgreSQL statement timeouts bound queries and the worker kills task processes that exceed their configured deadline. Role-checked replay preserves the original run. Task memory quotas remain pending.
+- Provider configuration needs an operator opt-in, tenant policy, and per-request confirmation before Copilot sends data. The API does not supply operational tools to a model. The four adapters have mocked protocol coverage. Real connectivity requires a separately authorized, configured provider.
+
+## Copilot and retrieval
+
+- Plain-text indexed passages come from the newest authorized version. Private documents remain account-scoped and expired documents leave the retrieval set. User-uploaded content is untrusted and can contain misleading instructions.
+- The gateway rechecks access before sending selected excerpts, bounds requests and responses, validates structured output, and rejects fabricated citation identifiers. Citation checks establish source identity and availability. They do not establish that every factual statement follows from the sources.
+- The model usage ledger stores provider, model, prompt version, duration, reported token counts, and accounted cost. Uncertain requests retain their budget reservation. Stopping a local request cannot guarantee that a provider stopped or waived billing.
+- Hybrid Knowledge Base search uses authorized, opt-in local Ollama embeddings and falls back to keyword search when vectors are unavailable. Only the latest visible, unexpired document versions can contribute passages. Copilot and Nexus continue to use their existing context paths. Retrieval quality evaluation with a live local model remains open.
+- Native Copilot streaming displays provisional text. The server validates schema and citations before persisting a completed turn. An interrupted partial response is not a verified answer and is excluded from the conversation export. Fake transports cover OpenAI-compatible, Anthropic, Gemini, and Ollama formats. Real provider and local embedding service checks require operator authorization.
+- Hybrid Nexus interpretation is explicitly triggered after a deterministic task completes. It sends that task summary and source identifiers. Its separate review status cannot alter the original finding, cryptographic verification, or the investigation's approval.
+- Counterfactuals report changes to documented rule factors under user-supplied assumptions. The original finding, current baseline, and scenario result remain separately identifiable.

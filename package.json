@@ -1,0 +1,9 @@
+{
+  "name": "vyrnexis-ai",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --workspace apps/web",
+    "build": "npm run build --workspace apps/web",
+    "test": "npm run test --workspace apps/web"
+  }
+}

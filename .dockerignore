@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+.dev-logs
+.pytest_cache
+**/__pycache__
+**/.pytest_cache
+**/node_modules
+apps/web/.next
+apps/web/.next-*
+*.db
+*.sqlite
+*.sqlite3

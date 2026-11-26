@@ -1,0 +1,46 @@
+services:
+  api:
+    env_file:
+      - path: .env.ai
+        required: false
+    build:
+      context: .
+      dockerfile: infrastructure/docker/api.Dockerfile
+    environment:
+      DATABASE_URL: sqlite:///./.dev-logs/vyrnexis-demo.db
+      VYRNEXIS_SCHEMA_MODE: sqlite_demo
+      ENVIRONMENT: production
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a random value before starting Compose}
+      VYRNEXIS_EVIDENCE_DIR: /app/.dev-logs/evidence
+      VYRNEXIS_EMBEDDINGS_ENABLED: ${VYRNEXIS_EMBEDDINGS_ENABLED:-0}
+      VYRNEXIS_EMBEDDING_URL: ${VYRNEXIS_EMBEDDING_URL:-}
+      VYRNEXIS_EMBEDDING_MODEL: ${VYRNEXIS_EMBEDDING_MODEL:-}
+      VYRNEXIS_EMBEDDING_REVISION: ${VYRNEXIS_EMBEDDING_REVISION:-1}
+      CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+    volumes:
+      - ./.dev-logs/vyrnexis-demo.db:/app/.dev-logs/vyrnexis-demo.db
+      - ./.dev-logs/evidence:/app/.dev-logs/evidence
+    ports:
+      - "127.0.0.1:8001:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; from json import load; response = load(urlopen('http://127.0.0.1:8000/health', timeout=3)); assert response['status'] == 'healthy'"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/web.Dockerfile
+    environment:
+      VYRNEXIS_API_URL: http://api:8000
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/login').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6

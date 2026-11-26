@@ -1,0 +1,24 @@
+# Repository instructions
+
+- Preserve the existing SQLite database (`vyrnexis.db`) and user records.
+- Use `.dev-logs/vyrnexis-demo.db` for synthetic demonstration data. Create it with `PYTHONPATH=apps/api python scripts/seed_demo.py` from the repository root.
+- Never treat the demo database as production data or demo metrics as live operational findings.
+- Keep dashboard values connected to API responses; do not add fabricated metrics, trends, or causal claims.
+- Supported organization-scoped API routes now require server-side authentication and tenant/object checks; cross-tenant API tests pass. Do not treat this local baseline as production-ready or claim an independent security review.
+- For frontend changes, run the production build and `npm exec tsc -- --noEmit` from `apps/web`.
+- Run backend tests only with an isolated `DATABASE_URL`, never the default database.
+- Agent analysis is deterministic and local to tenant-owned persisted data. Do not describe it as model inference unless a provider is configured and verified.
+- Preserve user changes and avoid deleting databases or unrelated processes.
+- Docker Compose uses the isolated `.dev-logs/vyrnexis-demo.db`; never bind mount `vyrnexis.db` into the demo stack.
+- The local `.env` contains a generated Docker signing key and is excluded from version control and Docker build context. Never print or commit its contents.
+- The separate `docker-compose.postgres.yml` stack uses a dedicated PostgreSQL volume and ignored `.env.postgres`. Keep the SQLite demo as the default stack. Run migrations only with an explicitly selected database URL. Never run the PostgreSQL smoke script against a non-demo stack.
+- Detection consumes submitted tenant data only. Keep Redis messages free of event payloads and require analyst confirmation before creating incidents from alerts.
+- Batch sources are tenant owned. Keep ingestion keys scoped to one source and out of client logs. Never collect raw payment card fields. Treat commerce scores as uncalibrated rule weights, preserve source references, and require analyst confirmation before creating an incident.
+- Forensic case and Nexus queries must use server-derived tenant scope. Case mutations and custody changes must preserve case version or ledger sequence checks. Keep note revisions append-only and route enrolled-file exports through the custody endpoint.
+- PostgreSQL is the durable source of Nexus task state. Redis carries wake signals. Keep analysis bounded and read-only with respect to source records. Use the human review state for decisions.
+- Handle uploaded image headers as untrusted data. Keep extraction in the bounded inspector and store only allowlisted derived fields. Preserve the original bytes, hashes, and custody history.
+- Keep optional provider credentials in server configuration such as ignored `.env.ai`. Require deployment and tenant opt-in plus request acknowledgement before sending organizational context. Mock providers in automated tests.
+- Apply document visibility, tenant ownership, and expiry before retrieval and when resolving citations. Keep historical results, agent interpretations, and hypothetical scenarios separate from original investigation records.
+- Keep published workflow graphs and completed simulation snapshots immutable. Validate workflow nodes against the server catalog. Keep workflow actions read-only with respect to source records and record reviewer decisions in the run.
+- Show BI values from authorized stored records. Keep original currencies separate and expose unavailable business measures explicitly.
+- Enable local embeddings only after operator setup and document-owner consent. Filter by current version, tenant, visibility, and expiry before ranking passages. Test native provider streaming with mocked transports by default.
