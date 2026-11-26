@@ -15,6 +15,23 @@ VYRNEXIS AI is a defensive security operations and digital forensics workspace. 
 | Workflow Studio and Digital Twin | Executes versioned workflows with persisted approval steps and simulates impact on recorded dependencies. |
 | Fraud and business analytics | Correlates synthetic refund fixtures with recorded signals and reports observed commerce totals by original currency. |
 
+## Dashboard screenshots
+
+Captured from the running command center with synthetic demonstration data. Select either screenshot to open it at full size.
+
+<table>
+  <tr>
+    <th>Desktop command center</th>
+    <th>Mobile activity detail</th>
+  </tr>
+  <tr>
+    <td width="73%"><a href="docs/graphics/dashboard-desktop.jpg"><img src="docs/graphics/dashboard-desktop.jpg" width="610" alt="Desktop command center with a seven-day activity chart, investigation summary, intelligence graph, and incident queue"></a></td>
+    <td width="27%"><a href="docs/graphics/dashboard-mobile.jpg"><img src="docs/graphics/dashboard-mobile.jpg" width="220" alt="Mobile command center showing the selected day’s recorded events, alerts, and opened incidents"></a></td>
+  </tr>
+</table>
+
+[View the project on the portfolio](https://artifactshruti.github.io/#vyrnexis-ai)
+
 ## See the workflow
 
 This diagram shows the investigation path exercised by the synthetic PostgreSQL demonstration.
